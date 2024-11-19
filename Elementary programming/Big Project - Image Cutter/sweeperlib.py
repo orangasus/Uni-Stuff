@@ -28,9 +28,10 @@ if modifiers & sweeperlib.MOD_SHIFT:
 """
 
 import pyglet
+
 # If the sweeperlib crashes while loading, you can try to uncomment these lines.
-#from pyglet.gl import glEnable, GL_TEXTURE_2D
-#glEnable(GL_TEXTURE_2D)
+# from pyglet.gl import glEnable, GL_TEXTURE_2D
+# glEnable(GL_TEXTURE_2D)
 
 MOUSE_LEFT = pyglet.window.mouse.LEFT
 MOUSE_MIDDLE = pyglet.window.mouse.MIDDLE
@@ -98,6 +99,7 @@ def load_sprites(path):
     images["f"] = pyglet.resource.image("tile_flag.png")
     graphics["images"] = images
 
+
 def load_duck(path):
     """
     Loads the necessary graphics for the duck game. This include the duck
@@ -112,6 +114,7 @@ def load_duck(path):
     sling = pyglet.resource.image("sling.png")
     graphics["images"]["duck"] = duck
     graphics["images"]["sling"] = sling
+
 
 def load_background_image(folder, image):
     """
@@ -153,6 +156,7 @@ def create_window(width=800, height=600, bg_color=(240, 240, 240, 255), bg_image
         graphics["window"].on_close = close
 
     resize_window(width, height, bg_color, bg_image)
+
 
 def resize_window(width, height, bg_color=(240, 240, 240, 255), bg_image=None):
     """
@@ -210,6 +214,7 @@ def set_mouse_handler(handler):
     else:
         print("Window hasn't been created!")
 
+
 def set_drag_handler(handler):
     """
     Sets a function that is used to handle mouse dragging. It is called
@@ -240,7 +245,8 @@ def set_drag_handler(handler):
         graphics["window"].on_mouse_drag = handler
     else:
         print("Window hasn't been created!")
-    
+
+
 def set_release_handler(handler):
     """
     Sets a function that is used when a mouse button is released. Typically
@@ -264,13 +270,13 @@ def set_release_handler(handler):
 
     :param function handler: handler function for mouse release
     """
-    
+
     if graphics["window"]:
         graphics["window"].on_mouse_release = handler
     else:
         print("Window hasn't been created!")
-    
-    
+
+
 def set_keyboard_handler(handler):
     """
     Sets a function that is for handling keyboard input. You won't need this
@@ -302,6 +308,7 @@ def set_keyboard_handler(handler):
     else:
         print("Window hasn't been created!")
 
+
 def read_keyboard():
     """
     Reads the keyboard state and returns it as a dictionary where keys
@@ -313,11 +320,12 @@ def read_keyboard():
 
     return state["keys"]
 
+
 def set_draw_handler(handler):
     """
     Sets a function that is used for drawing the game's graphics - somewhat
     important. The handler is a function that doesn't have any parameters, and
-    it should daw the window's contents by using the following functions:
+    it should draw the window's contents by using the following functions:
     
     clear_window (clears away everything draw last iteration)
     draw_background (draws the background color)
@@ -334,7 +342,8 @@ def set_draw_handler(handler):
     else:
         print("Window hasn't been created!")
 
-def set_interval_handler(handler, interval=1/60):
+
+def set_interval_handler(handler, interval=1 / 60):
     """
     Sets a function that will be called periodically using the given interval.
     Used for e.g. animations, on-screen timers etc. The interval is given as
@@ -358,6 +367,7 @@ def set_interval_handler(handler, interval=1/60):
     pyglet.clock.schedule_interval(handler, interval)
     handlers["timeouts"].append(handler)
 
+
 def start():
     """
     Starts the game. You need to create a window and set handlers before
@@ -366,6 +376,7 @@ def start():
 
     graphics["window"].set_visible(True)
     pyglet.app.run()
+
 
 def close():
     """
@@ -379,6 +390,7 @@ def close():
         pyglet.clock.unschedule(handler)
     pyglet.app.exit()
     graphics["window"].set_visible(False)
+
 
 def clear_window():
     """
@@ -395,6 +407,7 @@ def draw_background():
     """
 
     graphics["background"].draw()
+
 
 def draw_text(text, x, y, color=(0, 0, 0, 255), font="serif", size=32):
     """
@@ -413,6 +426,10 @@ def draw_text(text, x, y, color=(0, 0, 0, 255), font="serif", size=32):
     :param str font: name of the font family
     :param int size: fontin size as points
     """
+    print(f"text: {text}, x: {x}, y: {y}, color: {color}, font: {font}, size: {size}")
+
+    if len(color) == 3:
+        color = (*color, 255)
 
     text_box = pyglet.text.Label(text,
         font_name=font,
@@ -422,8 +439,9 @@ def draw_text(text, x, y, color=(0, 0, 0, 255), font="serif", size=32):
         anchor_x="left", anchor_y="bottom",
         batch=graphics["batch"],
         group=graphics["text_group"]
-    )
+        )
     text_box.draw()
+
 
 def begin_sprite_draw():
     """
@@ -435,6 +453,7 @@ def begin_sprite_draw():
         print("New versions of sweeperlib do not use the begin_sprite_draw function")
         print("You can remove any calls to this function from your code")
         state["notified"] = True
+
 
 def prepare_sprite(key, x, y):
     """
@@ -458,6 +477,7 @@ def prepare_sprite(key, x, y):
         group=graphics["fg_group"]
     ))
 
+
 def prepare_rectangle(x, y, width, height, color):
     """
     Adds a rectangle to the batch. The rectangle is drawn according to the
@@ -480,6 +500,7 @@ def prepare_rectangle(x, y, width, height, color):
         group=graphics["fg_group"]
     ))
 
+
 def draw_sprites():
     """
     Draws all prepared sprites from the batch in one go. Call this function
@@ -488,6 +509,7 @@ def draw_sprites():
 
     graphics["batch"].draw()
     graphics["sprites"].clear()
+
 
 if __name__ == "__main__":
     # Disabling two pylint warnings because it would complain about the test
@@ -499,6 +521,7 @@ if __name__ == "__main__":
     load_sprites("sprites")
     create_window()
 
+
     def draw():
         clear_window()
         draw_background()
@@ -507,8 +530,10 @@ if __name__ == "__main__":
 
         draw_sprites()
 
+
     def close_window(x, y, button, mods):
         close()
+
 
     set_draw_handler(draw)
     set_mouse_handler(close_window)
