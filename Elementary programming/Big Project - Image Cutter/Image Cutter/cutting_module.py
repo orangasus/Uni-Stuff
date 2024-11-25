@@ -20,11 +20,12 @@ def get_coords_of_all_rect(img_width, img_height, canv_width, canv_height, cutti
 
 def check_if_cutting_grid_fits(img_width, img_height, cutting_grid_params):
     x0, y0 = cutting_grid_params['top_left_rect_x'], cutting_grid_params['top_left_rect_y']
-    xn = (x0 + (cutting_grid_params['num_vert_rect'] - 1) * cutting_grid_params['rect_vert_dist']
-          + cutting_grid_params['num_vert_rect'] * cutting_grid_params['rect_height'])
-    yn = (y0 + (cutting_grid_params['num_horiz_rect'] - 1) * cutting_grid_params['rect_horiz_dist']
-          + cutting_grid_params['num_horiz_rect'] * cutting_grid_params['rect_width'])
-    return (x0 <= xn <= img_width) and (y0 <= yn <= img_height)
+    xn = x0 + (cutting_grid_params['num_horiz_rect'] * cutting_grid_params['rect_width'] +
+               (cutting_grid_params['num_horiz_rect'] - 1) * cutting_grid_params['rect_horiz_dist'])
+    yn = y0 + (cutting_grid_params['num_vert_rect'] * cutting_grid_params['rect_height'] +
+               (cutting_grid_params['num_vert_rect'] - 1) * cutting_grid_params['rect_vert_dist'])
+
+    return (0 <= x0 <= xn <= img_width) and (0 <= y0 <= yn <= img_height)
 
 
 def convert_representation(x0, y0, cutting_grid_params):

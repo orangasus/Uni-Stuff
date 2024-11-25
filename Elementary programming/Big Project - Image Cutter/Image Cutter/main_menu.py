@@ -28,6 +28,7 @@ class MainMenu:
         self.root = root
         self.root.title(self.WINDOW_TITLE)
         self.root.geometry(self.MAIN_MENU_GEOMETRY)
+        self.root.resizable(False, False)
 
         self.window_state = {'image_uploaded': False}
 

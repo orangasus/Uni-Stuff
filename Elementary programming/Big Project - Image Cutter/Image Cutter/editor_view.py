@@ -48,6 +48,11 @@ class EditorView:
 
         self.parent_widget.after(100, self.center_image_on_canvas)
 
+        self.cur_mouse_x = parent_widget.winfo_pointerx()
+        self.cur_mouse_y = parent_widget.winfo_pointery()
+
+        self.window_state = {'rect_is_dragged' : False}
+
     def create_layout(self):
         cur_label_row, cur_label_col = 0, 0
         cur_entry_row, cur_entry_col = 1, 0
@@ -71,6 +76,10 @@ class EditorView:
         self.cut_button.grid(row=8, column=1, columnspan=2)
         self.save_params_button.grid(row=9, column=1, columnspan=2)
         self.image_canvas.grid(row=0, column=0, rowspan=11, sticky='news')
+
+        self.image_canvas.bind('<ButtonPress>', self.on_rectangle_mouse_click)
+        self.image_canvas.bind('<ButtonRelease>', self.on_rectangle_mouse_release)
+        self.image_canvas.bind('<B1-Motion>', self.on_rectangle_mouse_held)
 
     def create_grid_for_layout(self):
         self.parent_widget.columnconfigure(1, weight=0)
@@ -113,14 +122,17 @@ class EditorView:
 
     def cut_btn_clicked(self):
         self.cutting_grid_params = {key: int(val.get()) for key, val in self.entries_reference_dict.items()}
-        self.draw_cutting_grid_on_canvas()
-        saving_dir = filedialog.askdirectory(title='Select folder to save cut images')
-        if not saving_dir:
-            tk.messagebox.showinfo('Error', 'No folder selected')
+        if cutting_module.check_if_cutting_grid_fits(self.img_to_cut.width, self.img_to_cut.height, self.cutting_grid_params):
+            self.draw_cutting_grid_on_canvas()
+            saving_dir = filedialog.askdirectory(title='Select folder to save cut images')
+            if not saving_dir:
+                tk.messagebox.showinfo('Error', 'No folder selected')
+            else:
+                cutting_module.perform_cuts(self.img_to_cut.width, self.img_to_cut.height,
+                                            saving_dir, self.img_to_cut, self.cutting_grid_params,
+                                            self.image_canvas.winfo_width(), self.image_canvas.winfo_height())
         else:
-            cutting_module.perform_cuts(self.img_to_cut.width, self.img_to_cut.height,
-                                        saving_dir, self.img_to_cut, self.cutting_grid_params,
-                                        self.image_canvas.winfo_width(), self.image_canvas.winfo_height())
+            tk.messagebox.showinfo('Error', 'Grid outside the image')
 
     def center_image_on_canvas(self):
         canv_width = self.image_canvas.winfo_width()
@@ -138,12 +150,45 @@ class EditorView:
                                            y0 + self.cutting_grid_params['rect_height'], tags='rect')
 
     def draw_cutting_grid_on_canvas(self):
-        if cutting_module.check_if_cutting_grid_fits(self.img_to_cut.width, self.img_to_cut.height,
-                                                     self.cutting_grid_params):
-            self.image_canvas.delete('rect')
-            for el in cutting_module.get_coords_of_all_rect(self.img_to_cut.width, self.img_to_cut.height,
-                                                            self.image_canvas.winfo_width(), self.image_canvas.winfo_height(),
-                                                            self.cutting_grid_params):
-                self.draw_rectangle_on_canvas(el[0], el[1])
-        else:
-            tk.messagebox.showinfo("Invalid Input", 'Cutting Grid doesn\'t fit')
+        self.image_canvas.delete('rect')
+        for el in cutting_module.get_coords_of_all_rect(self.img_to_cut.width, self.img_to_cut.height,
+                                                        self.image_canvas.winfo_width(), self.image_canvas.winfo_height(),
+                                                        self.cutting_grid_params):
+            self.draw_rectangle_on_canvas(el[0], el[1])
+
+
+    def on_rectangle_mouse_click(self, event):
+        mouse_x, mouse_y = self.parent_widget.winfo_pointerx(), self.parent_widget.winfo_pointery()
+        self.cur_mouse_x = mouse_x
+        self.cur_mouse_y = mouse_y
+        self.window_state['rect_is_dragged'] = True
+        print(mouse_x, mouse_y)
+
+    def on_rectangle_mouse_release(self, event):
+        mouse_x, mouse_y = self.parent_widget.winfo_pointerx(), self.parent_widget.winfo_pointery()
+        self.window_state['rect_is_dragged'] = False
+        print(mouse_x, mouse_y)
+
+
+    def on_rectangle_mouse_held(self, event):
+        if self.window_state['rect_is_dragged']:
+            delta_mouse_x = self.parent_widget.winfo_pointerx() - self.cur_mouse_x
+            delta_mouse_y = self.parent_widget.winfo_pointery() - self.cur_mouse_y
+
+            self.cur_mouse_x = self.parent_widget.winfo_pointerx()
+            self.cur_mouse_y = self.parent_widget.winfo_pointery()
+
+            new_top_left_rect_x = self.cutting_grid_params['top_left_rect_x'] + delta_mouse_x
+            new_top_left_rect_y = self.cutting_grid_params['top_left_rect_y'] + delta_mouse_y
+
+            # test_grid_params = self.cutting_grid_params.copy()
+            # test_grid_params['top_left_rect_x'] = new_top_left_rect_x
+            # test_grid_params['top_left_rect_y'] = new_top_left_rect_y
+            #
+            # if cutting_module.check_if_cutting_grid_fits(self.img_to_cut.width, self.img_to_cut.height,
+            #                                              test_grid_params):
+            self.cutting_grid_params['top_left_rect_x'] = new_top_left_rect_x
+            self.cutting_grid_params['top_left_rect_y'] = new_top_left_rect_y
+            self.entries_reference_dict['top_left_rect_x'].set(str(new_top_left_rect_x))
+            self.entries_reference_dict['top_left_rect_y'].set(str(new_top_left_rect_y))
+            self.draw_cutting_grid_on_canvas()
