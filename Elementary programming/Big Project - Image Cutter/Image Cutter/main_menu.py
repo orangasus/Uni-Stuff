@@ -1,58 +1,97 @@
+import json
 import tkinter as tk
 from tkinter import filedialog as fd
+from tkinter import messagebox
 from tkinter import ttk
 
 from PIL import Image, ImageTk
-from prompt_toolkit.output.win32 import BACKGROUND_COLOR
+from PIL.ImageTk import PhotoImage
+from pyglet.resource import image
+from pygments.lexer import default
 
+import cutting_module
+import styling_module
 from editor_view import EditorView
 
+import text_constants
 
 class MainMenu:
     MAIN_MENU_GEOMETRY = '480x480'
-    MAX_IMAGE_RESOLUTION = (100, 100)
+    MAX_IMAGE_RESOLUTION = (200, 200)
     WINDOW_TITLE = 'Image Cutter'
     FILETYPES = (
         ('Image files', '*.png;*.jpg;*.jpeg'),
         ('All files', '*.*')
     )
-    BACKGROUND_COLOR = '#2E2E2E'
-    styles = {
-        "bg": "#2E2E2E",  # Background color
-        "fg": "#FFFFFF",  # Foreground color
-        "font": ("Helvetica", 12),
-    }
 
     def __init__(self, root):
         self.root = root
         self.root.title(self.WINDOW_TITLE)
         self.root.geometry(self.MAIN_MENU_GEOMETRY)
 
+        self.window_state = {'image_uploaded': False}
+
         # Styling, woo-hoo!
-        self.root.config(bg = self.BACKGROUND_COLOR)
+        self.root.config(bg=styling_module.BACKGROUND_DARK_GRAY)
         self.load_custom_theme()
+        ttk_style = ttk.Style()
+        ttk_style.map("TButton",
+                      background=[('active', styling_module.ACCENT_BLUE), ('!active', styling_module.BACKGROUND_BLACK)],
+                      foreground=[('disabled', styling_module.FOREGROUND_LIGHT_GRAY),
+                                  ('!disabled', styling_module.FOREGROUND_WHITE)],
+                      highlightbackground=[('focus', styling_module.ACCENT_BLUE),
+                                           ('!focus', styling_module.BACKGROUND_BLACK)],
+                      highlightcolor=[('focus', styling_module.ACCENT_BLUE),
+                                      ('!focus', styling_module.BACKGROUND_BLACK)],
+                      highlightthickness=[('focus', 1), ('!focus', 0)])
+        ttk_style.configure("TLabel", background=styling_module.BACKGROUND_DARK_GRAY)
 
         self.uploaded_image = None
         self.path_to_image = None
 
+        self.create_grid_for_layout()
+
         # initializing image label
-        self.img_label = ttk.Label(self.root, background=self.BACKGROUND_COLOR)
-        self.img_label.pack()
-        self.img_label.image = None
+        temp_img = Image.open('./Resources/noimage.jpg')
+        temp_img.thumbnail(self.MAX_IMAGE_RESOLUTION)
+        self.default_image = temp_img
+        self.image_canvas = tk.Canvas(self.root, background=styling_module.BACKGROUND_DARK_GRAY, width=200, height=200)
+        self.image_canvas.grid(row=0, column=0, columnspan=2, pady=20)
         # initializing buttons
         self.editor_view_btn = ttk.Button(self.root, text="Editor View", command=self.open_editor_view)
-        self.editor_view_btn.pack()
+        self.editor_view_btn.grid(row=3, column=0, padx=5, pady=5, sticky=tk.E)
         self.upload_img_btn = ttk.Button(self.root, text="Upload Image", command=self.upload_image)
-        self.upload_img_btn.pack()
-        self.upload_params_btn = ttk.Button(self.root, text="Upload Params", command=self.upload_params)
-        self.upload_params_btn.pack()
+        self.upload_img_btn.grid(row=2, column=0, columnspan=2, padx=20, pady=5, sticky=tk.N)
+        self.upload_params_btn = ttk.Button(self.root, text="Run a Preset", command=self.upload_params_and_cut)
+        self.upload_params_btn.grid(row=3, column=1, padx=5, pady=5, sticky=tk.W)
+        # initializing text label
+        self.text_label = ttk.Label(self.root, text=text_constants.MAIN_MENU_SUMMARY, wraplength=440, font=('TkDefaultFont', 10))
+        self.text_label.grid(row=1, column=0, columnspan=2, pady=5, padx=10)
 
-    def apply_styles(widget):
-        widget.config(bg=styles["bg"], fg=styles["fg"], font=styles["font"])
+        self.root.after(100, self.center_image_on_canvas)
+
+    def center_image_on_canvas(self):
+        self.image_canvas.update_idletasks()  # Ensure the canvas has the updated size
+
+        canv_width = self.image_canvas.winfo_width()
+        canv_height = self.image_canvas.winfo_height()
+
+        if self.window_state['image_uploaded']:
+            temp = self.uploaded_image
+            temp.thumbnail(self.MAX_IMAGE_RESOLUTION)
+            tk_obj = ImageTk.PhotoImage(temp)
+        else:
+            tk_obj = ImageTk.PhotoImage(self.default_image)
+
+        x_center = canv_width // 2
+        y_center = canv_height // 2
+
+        self.image_canvas.create_image(x_center, y_center, anchor=tk.CENTER, image=tk_obj)
+        self.image_canvas.image = tk_obj
 
     def load_custom_theme(self):
         import os
-        theme_dir = r'C:\Users\Gleb\Documents\Uni\Uni Programming\Elementary programming\Big Project - Image Cutter\Image Cutter\TTK Themes'
+        theme_dir = './TTK Themes'
         print(f"Loading custom theme from: {theme_dir}")
 
         if os.path.exists(theme_dir):
@@ -73,24 +112,41 @@ class MainMenu:
         else:
             print(f"Theme directory {theme_dir} does not exist")
 
+    def create_grid_for_layout(self):
+        self.root.columnconfigure(0, weight=1)
+        self.root.columnconfigure(1, weight=1)
+
+        self.root.rowconfigure(0, weight=0)
+        self.root.rowconfigure(1, weight=0)
+        self.root.rowconfigure(2, weight=0)
+        self.root.rowconfigure(3, weight=0)
+
     def upload_image(self):
         # askopenfilename() returns path to the selected file - super convi)
         self.path_to_image = fd.askopenfilename(title='Select Image',
                                                 initialdir='/',
                                                 filetypes=self.FILETYPES)
         self.uploaded_image = Image.open(self.path_to_image)
-        # Makes sure that the image occupies no more than X by Y pixels
-        self.uploaded_image.thumbnail(self.MAX_IMAGE_RESOLUTION)
-        img_tk = ImageTk.PhotoImage(self.uploaded_image)
-        self.img_label.config(image=img_tk)
-        # telling the garbage collector to back off
-        self.img_label.image = img_tk
+        self.window_state['image_uploaded'] = True
+        self.center_image_on_canvas()
 
     def open_editor_view(self):
-        if self.uploaded_image is not None:
+        if self.window_state['image_uploaded']:
             EditorView(tk.Toplevel(self.root), self.path_to_image)
         else:
-            print("No image :(")
+            tk.messagebox.showinfo('Not so Fast', 'Please select an image first')
 
-    def upload_params(self):
-        print("...")
+    def upload_params_and_cut(self):
+        if self.window_state['image_uploaded']:
+            params_file_path = fd.askopenfilename(filetypes=[('JSON', '*.json')])
+            with open(params_file_path) as params_file:
+                data = json.load(params_file)
+                if cutting_module.check_if_cutting_grid_fits(self.uploaded_image.width,
+                                                             self.uploaded_image.height, data):
+                    saving_folder = fd.askdirectory(title='Select folder to save cut images')
+                    cutting_module.perform_cuts(self.uploaded_image.width, self.uploaded_image.height, saving_folder,
+                                                self.uploaded_image, data)
+                else:
+                    tk.messagebox.showinfo('Error', 'Grid could\'t be applied to the image')
+        else:
+            tk.messagebox.showinfo('Not so Fast', 'Please select an image first')
