@@ -9,7 +9,6 @@ def get_coords_of_all_rect(img_width, img_height, canv_width, canv_height, cutti
 
     for i in range(cutting_grid_params['num_vert_rect']):
         for j in range(cutting_grid_params['num_horiz_rect']):
-            print(f"Rectangle {i * cutting_grid_params['num_horiz_rect'] + j + 1}: (x={cur_x}, y={cur_y})")
             coords.append((cur_x, cur_y))
             cur_x += cutting_grid_params['rect_width'] + cutting_grid_params['rect_horiz_dist']
         cur_x = cutting_grid_params['top_left_rect_x'] + origin_x
@@ -48,7 +47,6 @@ def perform_cuts(img_width, img_height, saving_folder, img_to_cut, cutting_grid_
 
     for ind, el in enumerate(get_coords_of_all_rect(img_width, img_height, canv_width, canv_height, cutting_grid_params)):
         cur_x0, cur_y0 = el[0] - origin_x, el[1] - origin_y
-        print(cur_x0, cur_y0)
         cut_box = convert_representation(cur_x0, cur_y0, cutting_grid_params)
         cropped_img = img_to_cut.crop(cut_box)
         cropped_img.save(f'{saving_folder}/img{ind}.png')

@@ -5,9 +5,6 @@ from tkinter import messagebox
 from tkinter import ttk
 
 from PIL import Image, ImageTk
-from PIL.ImageTk import PhotoImage
-from pyglet.resource import image
-from pygments.lexer import default
 
 import cutting_module
 import styling_module
@@ -123,7 +120,6 @@ class MainMenu:
         self.root.rowconfigure(3, weight=0)
 
     def upload_image(self):
-        # askopenfilename() returns path to the selected file - super convi)
         self.path_to_image = fd.askopenfilename(title='Select Image',
                                                 initialdir='/',
                                                 filetypes=self.FILETYPES)
