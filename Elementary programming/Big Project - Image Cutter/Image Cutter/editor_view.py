@@ -7,8 +7,6 @@ from PIL import ImageTk, Image, ImageDraw
 
 import json
 
-from fake_useragent.utils import update
-
 # My modules
 import cutting_module
 import styling_module

@@ -120,12 +120,19 @@ class MainMenu:
         self.root.rowconfigure(3, weight=0)
 
     def upload_image(self):
-        self.path_to_image = fd.askopenfilename(title='Select Image',
+        try:
+            path_to_image = fd.askopenfilename(title='Select Image',
                                                 initialdir='/',
                                                 filetypes=self.FILETYPES)
-        self.uploaded_image = Image.open(self.path_to_image)
-        self.window_state['image_uploaded'] = True
-        self.center_image_on_canvas()
+            print('Path:', path_to_image)
+            uploaded_img = Image.open(path_to_image)
+        except:
+            print('Image wasn\'t uploaded')
+        else:
+            self.uploaded_image = uploaded_img
+            self.path_to_image = path_to_image
+            self.window_state['image_uploaded'] = True
+            self.center_image_on_canvas()
 
     def open_editor_view(self):
         if self.window_state['image_uploaded']:
