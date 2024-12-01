@@ -6,6 +6,8 @@ from tkinter import ttk
 
 from PIL import Image, ImageTk
 
+import os
+
 import cutting_module
 import styling_module
 from editor_view import EditorView
@@ -29,7 +31,7 @@ class MainMenu:
 
         self.window_state = {'image_uploaded': False}
 
-        # Styling, woo-hoo!
+        # Styling
         self.root.config(bg=styling_module.BACKGROUND_DARK_GRAY)
         self.load_custom_theme()
         ttk_style = ttk.Style()
@@ -69,7 +71,10 @@ class MainMenu:
         self.root.after(100, self.center_image_on_canvas)
 
     def center_image_on_canvas(self):
-        self.image_canvas.update_idletasks()  # Ensure the canvas has the updated size
+        """
+        Centers image on canvas widget, because by default image center
+        is put in the top left corder
+        """
 
         canv_width = self.image_canvas.winfo_width()
         canv_height = self.image_canvas.winfo_height()
@@ -88,19 +93,17 @@ class MainMenu:
         self.image_canvas.image = tk_obj
 
     def load_custom_theme(self):
-        import os
+        """Loads custom awdark tkinter ui theme"""
         theme_dir = './TTK Themes'
         print(f"Loading custom theme from: {theme_dir}")
 
         if os.path.exists(theme_dir):
             self.root.tk.call('lappend', 'auto_path', theme_dir)
             try:
-                # Adjusted call to ensure theme is loaded correctly
                 self.root.tk.call('package', 'require', 'awthemes')  # Loading awthemes which is main
                 self.root.tk.call('package', 'require', 'ttk::theme::awdark')  # Then load specific theme
                 self.root.tk.call('package', 'require', 'awdark')  # Alternate method
 
-                # Set the theme
                 self.style = ttk.Style()
                 self.style.theme_use('awdark')
 
@@ -111,6 +114,10 @@ class MainMenu:
             print(f"Theme directory {theme_dir} does not exist")
 
     def create_grid_for_layout(self):
+        """
+        Creates layout grid for tkinter window
+        :return:
+        """
         self.root.columnconfigure(0, weight=1)
         self.root.columnconfigure(1, weight=1)
 
@@ -120,6 +127,10 @@ class MainMenu:
         self.root.rowconfigure(3, weight=0)
 
     def upload_image(self):
+        """
+        Uploads image
+        :return:
+        """
         try:
             path_to_image = fd.askopenfilename(title='Select Image',
                                                 initialdir='/',
@@ -141,6 +152,11 @@ class MainMenu:
             tk.messagebox.showinfo('Not so Fast', 'Please select an image first')
 
     def upload_params_and_cut(self):
+        """
+        Uploads cutting grid parameters from a json file
+        and performs cuts on the image based on them
+        :return:
+        """
         if self.window_state['image_uploaded']:
             params_file_path = fd.askopenfilename(filetypes=[('JSON', '*.json')])
             with open(params_file_path) as params_file:

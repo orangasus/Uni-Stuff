@@ -1,4 +1,8 @@
 def get_coords_of_all_rect_real(img_width, img_height, canv_width, canv_height, cutting_grid_params):
+    """
+    Returns real coordinates of top left corner of each rectangle
+    in the cutting grid
+    """
     coords = []
 
     # Adjusting origin point to be in the top left corner of the image, not canvas
@@ -17,6 +21,10 @@ def get_coords_of_all_rect_real(img_width, img_height, canv_width, canv_height, 
     return coords
 
 def get_coords_of_all_rect_scaled(img_width, img_height, canv_width, canv_height, scaled_cutting_grid_params):
+    """
+    Returns scaled coordinates of top left corner of each rectangle
+    in the cutting grid
+    """
     coords = []
 
     # Adjusting origin point to be in the top left corner of the image, not canvas
@@ -36,6 +44,9 @@ def get_coords_of_all_rect_scaled(img_width, img_height, canv_width, canv_height
 
 
 def check_if_cutting_grid_fits(img_width, img_height, cutting_grid_params):
+    """
+    Checks if cutting grid based on given parameters fits into the image
+    """
     print(img_width,img_height)
     x0, y0 = cutting_grid_params['top_left_rect_x'], cutting_grid_params['top_left_rect_y']
     xn = x0 + (cutting_grid_params['num_horiz_rect'] * cutting_grid_params['rect_width'] +
@@ -49,6 +60,10 @@ def check_if_cutting_grid_fits(img_width, img_height, cutting_grid_params):
 
 
 def convert_representation(x0, y0, cutting_grid_params):
+    """
+    Converts top-left corner rectangle representation to a
+    box representation: coordinates of each edge
+    """
     x_left_edge = x0
     x_right_edge = x0 + cutting_grid_params['rect_width']
     y_bottom_edge = y0
@@ -57,6 +72,10 @@ def convert_representation(x0, y0, cutting_grid_params):
 
 
 def perform_cuts(img_width, img_height, saving_folder, img_to_cut, cutting_grid_params, canv_width = None, canv_height=None):
+    """
+    Performs cuts on the image based on real cutting parameters
+    and saves resutling images
+    """
     if canv_width is None:
         canv_width = img_width
     if canv_height is None:

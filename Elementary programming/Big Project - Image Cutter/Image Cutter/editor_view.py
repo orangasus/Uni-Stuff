@@ -1,3 +1,5 @@
+# Tkinter imports
+import json
 import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox
@@ -5,15 +7,12 @@ from tkinter import ttk
 
 from PIL import ImageTk, Image, ImageDraw
 
-import json
-
 # My modules
 import cutting_module
 import styling_module
 
 
 class EditorView:
-    #WINDOW_GEOMETRY = '1024x1024'
     MAX_IMAGE_RESOLUTION = (700, 700)
     WINDOW_TITLE = 'Editor View'
     PARAMETERS_NAME = ['num_horiz_rect', 'num_vert_rect', 'rect_width', 'rect_height', 'rect_horiz_dist',
@@ -24,26 +23,28 @@ class EditorView:
     def __init__(self, parent_widget, path_to_image):
         self.parent_widget = parent_widget
         self.parent_widget.title(self.WINDOW_TITLE)
-        #self.parent_widget.attributes('-fullscreen', True)
-        #self.parent_widget.geometry(self.WINDOW_GEOMETRY)
+        # Making editor view a full screen window
         self.parent_widget.state('zoomed')
         self.parent_widget.resizable(False, False)
 
         self.parent_widget.config(bg=styling_module.BACKGROUND_DARK_GRAY)
 
-        # creating a dict with pair name of parameter : reference to the entry object
+        # Dictionary with current values of each entry widget as value, key is the parameters name
         self.entries_reference_dict = {name: tk.StringVar() for name in self.PARAMETERS_NAME}
+        # List of all entries widgets
         self.entries_widgets = []
 
         self.img_scaling_coefficient = 1
 
-        # dict with param_name : integer value for cutting grid params
+        # Dictionary with real parameters of the cutting grid - used for actual cutting
         self.cutting_grid_params = {}
+        # Dictionary with real parameters of the cutting grid - used for working with scaled images (in UI)
         self.scaled_cutting_grid_params = {}
 
         self.create_grid_for_layout()
 
         self.img_to_cut = Image.open(path_to_image)
+        # Tkinter uses ImageTk to display images
         self.tk_img = ImageTk.PhotoImage(self.img_to_cut)
         self.image_canvas = tk.Canvas(self.parent_widget, bg=styling_module.BACKGROUND_SOFT_BLACK)
 
@@ -54,6 +55,7 @@ class EditorView:
 
         self.create_layout()
 
+        # Functions called after a small delay, so canvas width and height are defined
         self.parent_widget.after(100, self.get_image_scaling_coefficient)
         self.parent_widget.after(110, self.center_image_on_canvas)
 
@@ -63,8 +65,11 @@ class EditorView:
         self.window_state = {'rect_is_dragged': False, 'up_key_pressed': False,
                              'down_key_pressed': False, 'shift_key_pressed': False}
 
-    # Functions responsible for creating layout
     def create_layout(self):
+        """
+        Creates layout of the Editor View and
+        performs necessary bindings
+        """
         cur_label_row, cur_label_col = 0, 0
         cur_entry_row, cur_entry_col = 1, 0
         for ind, param_name in enumerate(self.PARAMETERS_NAME):
@@ -88,20 +93,23 @@ class EditorView:
             cur_label_col = (cur_label_col + 1) % 2
             cur_entry_col = (cur_entry_col + 1) % 2
 
-        self.parent_widget.bind('<Shift_L>', self.shift_key_pressed)
-        self.parent_widget.bind('<KeyRelease-Shift_L>', self.shift_key_released)
-        self.parent_widget.bind('<Shift_R>', self.shift_key_pressed)
-        self.parent_widget.bind('<KeyRelease-Shift_R>', self.shift_key_released)
-
         self.cut_button.grid(row=8, column=1, columnspan=2, pady=5)
         self.save_params_button.grid(row=9, column=1, columnspan=2, pady=5)
         self.upload_params_button.grid(row=10, column=1, columnspan=2, pady=5)
         self.image_canvas.grid(row=0, column=0, rowspan=12, sticky='news')
 
+        self.parent_widget.bind('<Shift_L>', self.shift_key_pressed)
+        self.parent_widget.bind('<KeyRelease-Shift_L>', self.shift_key_released)
+        self.parent_widget.bind('<Shift_R>', self.shift_key_pressed)
+        self.parent_widget.bind('<KeyRelease-Shift_R>', self.shift_key_released)
+
         self.image_canvas.tag_bind('rect', '<ButtonPress-1>', self.on_rectangle_mouse_click)
         self.image_canvas.tag_bind('rect', '<B1-Motion>', self.on_rectangle_mouse_held)
 
     def create_grid_for_layout(self):
+        """
+        Creates layout grid for tkinter window
+        """
         self.parent_widget.columnconfigure(1, weight=0)
         self.parent_widget.columnconfigure(2, weight=0)
         self.parent_widget.columnconfigure(0, weight=1)
@@ -111,6 +119,9 @@ class EditorView:
         self.parent_widget.rowconfigure(11, weight=1)
 
     def get_image_scaling_coefficient(self):
+        """
+        Calculates image scaling coefficient for it to fit in the window
+        """
         canv_width = self.image_canvas.winfo_width()
         canv_height = self.image_canvas.winfo_height()
 
@@ -118,12 +129,16 @@ class EditorView:
         img_height = self.img_to_cut.height
 
         if img_height > canv_height or img_width > canv_width:
-            self.img_scaling_coefficient = min(canv_width/img_width, canv_height/img_height)
+            self.img_scaling_coefficient = min(canv_width / img_width, canv_height / img_height)
             img_copy = self.img_to_cut.copy()
             img_copy.thumbnail((canv_width, canv_height))
             self.tk_img = ImageTk.PhotoImage(img_copy)
 
     def center_image_on_canvas(self):
+        """
+        Centers image on canvas widget, because by default image center
+        is put in the top left corder
+        """
         canv_width = self.image_canvas.winfo_width()
         canv_height = self.image_canvas.winfo_height()
 
@@ -140,6 +155,9 @@ class EditorView:
             self.set_text_entry_widget(self.entries_widgets[ind], str(self.cutting_grid_params[k]))
 
     def on_entry_change(self, event=None):
+        """
+        Updates real and scalable parameters when entries change
+        """
         if self.check_that_all_entries_non_empty():
             self.update_real_params_from_entries()
             self.update_scaled_params_from_real_params()
@@ -150,6 +168,9 @@ class EditorView:
 
     # Button handler function
     def save_params_clicked(self):
+        """
+        Saves cutting parameters in a json file
+        """
         if self.check_if_all_params_int():
             json_filename = tk.filedialog.asksaveasfilename(filetypes=self.FILETYPES, defaultextension='.json')
             self.update_real_params_from_entries()
@@ -158,6 +179,9 @@ class EditorView:
                 params_file.write(json.dumps(self.cutting_grid_params))
 
     def cut_btn_clicked(self):
+        """
+        Perform cuts based on cutting grid parameters
+        """
         self.update_real_params_from_entries()
         self.update_scaled_params_from_real_params()
         if cutting_module.check_if_cutting_grid_fits(self.img_to_cut.width, self.img_to_cut.height,
@@ -173,6 +197,9 @@ class EditorView:
             tk.messagebox.showinfo('Error', 'Grid outside the image')
 
     def upload_params_clicked(self):
+        """
+        Uploads cutting parameters from a json file
+        """
         params_file_path = tk.filedialog.askopenfilename(filetypes=[('JSON', '*.json')])
         with open(params_file_path) as params_file:
             data = json.load(params_file)
@@ -197,25 +224,26 @@ class EditorView:
 
     # Functions responsible for drawing cutting grid
     def draw_rectangle_on_canvas(self, x0, y0, rect_width, rect_height):
-        # Create a new image with transparent background
+        """
+        Draws a semi-transparent rectangle on canvas
+        """
         rect_image = Image.new('RGBA', (rect_width, rect_height), (255, 255, 255, 0))
         draw = ImageDraw.Draw(rect_image)
 
-        # Draw a semi-transparent rectangle
         draw.rectangle(((0, 0), (rect_width, rect_height)), fill=(0, 0, 0, 127))  # Red with 50% transparency
 
-        # Convert to ImageTk format
         tk_rect_image = ImageTk.PhotoImage(rect_image)
 
-        # Add the image to the canvas
         self.image_canvas.create_image(x0, y0, anchor=tk.NW, image=tk_rect_image, tags='rect')
 
-        # Keep a reference to avoid garbage collection
         if not hasattr(self, 'image_references'):
             self.image_references = []
         self.image_references.append(tk_rect_image)
 
     def draw_cutting_grid_on_canvas(self):
+        """
+        Draws cutting grid on canvas
+        """
         self.image_canvas.delete('rect')
         self.update_scaled_params_from_real_params()
         for el in cutting_module.get_coords_of_all_rect_scaled(
@@ -233,6 +261,9 @@ class EditorView:
 
     # Functions responsible for using mouse to drag cutting grid
     def on_rectangle_mouse_held(self, event):
+        """
+        Changes cutting grid coordinates based on mouse drag motion
+        """
         delta_mouse_x = event.x - self.cur_mouse_x
         delta_mouse_y = event.y - self.cur_mouse_y
 
@@ -252,11 +283,6 @@ class EditorView:
     def on_rectangle_mouse_click(self, event):
         self.cur_mouse_x = event.x
         self.cur_mouse_y = event.y
-
-    def update_entries_from_params(self):
-        for ind, k in enumerate(self.cutting_grid_params.keys()):
-            self.set_text_entry_widget(self.entries_widgets[ind], self.cutting_grid_params[k])
-        self.update_scaled_params_from_real_params()
 
     # Functions responsible for handling arrow keys and changing the entries values accordingly
     def set_text_entry_widget(self, entry_widget, text):
@@ -284,6 +310,9 @@ class EditorView:
         self.window_state['shift_key_pressed'] = False
 
     def start_incrementing(self):
+        """
+        Changes the entry widget value after user used arrow keys
+        """
         try:
             ind = self.entries_widgets.index(self.parent_widget.focus_get())
         except ValueError:
@@ -303,10 +332,14 @@ class EditorView:
     def update_real_params_from_entries(self):
         self.cutting_grid_params = {key: int(val.get()) for key, val in self.entries_reference_dict.items()}
 
+    def update_entries_from_params(self):
+        for ind, k in enumerate(self.cutting_grid_params.keys()):
+            self.set_text_entry_widget(self.entries_widgets[ind], self.cutting_grid_params[k])
+        self.update_scaled_params_from_real_params()
+
     def update_scaled_params_from_real_params(self):
         for key, value in self.cutting_grid_params.items():
             if key not in ('num_vert_rect', 'num_horiz_rect'):
                 self.scaled_cutting_grid_params[key] = round(int(value) * self.img_scaling_coefficient)
             else:
                 self.scaled_cutting_grid_params[key] = int(value)
-
