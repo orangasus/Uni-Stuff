@@ -13,7 +13,7 @@ import styling_module
 
 
 class EditorView:
-    WINDOW_GEOMETRY = '700x700'
+    #WINDOW_GEOMETRY = '1024x1024'
     MAX_IMAGE_RESOLUTION = (700, 700)
     WINDOW_TITLE = 'Editor View'
     PARAMETERS_NAME = ['num_horiz_rect', 'num_vert_rect', 'rect_width', 'rect_height', 'rect_horiz_dist',
@@ -24,7 +24,9 @@ class EditorView:
     def __init__(self, parent_widget, path_to_image):
         self.parent_widget = parent_widget
         self.parent_widget.title(self.WINDOW_TITLE)
-        self.parent_widget.geometry(self.WINDOW_GEOMETRY)
+        #self.parent_widget.attributes('-fullscreen', True)
+        #self.parent_widget.geometry(self.WINDOW_GEOMETRY)
+        self.parent_widget.state('zoomed')
         self.parent_widget.resizable(False, False)
 
         self.parent_widget.config(bg=styling_module.BACKGROUND_DARK_GRAY)

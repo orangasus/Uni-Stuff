@@ -75,7 +75,7 @@ class MainMenu:
         canv_height = self.image_canvas.winfo_height()
 
         if self.window_state['image_uploaded']:
-            temp = self.uploaded_image
+            temp = self.uploaded_image.copy()
             temp.thumbnail(self.MAX_IMAGE_RESOLUTION)
             tk_obj = ImageTk.PhotoImage(temp)
         else:
@@ -151,6 +151,8 @@ class MainMenu:
                     cutting_module.perform_cuts(self.uploaded_image.width, self.uploaded_image.height, saving_folder,
                                                 self.uploaded_image, data)
                 else:
+                    print(params_file)
+                    print(data)
                     tk.messagebox.showinfo('Error', 'Grid could\'t be applied to the image')
         else:
             tk.messagebox.showinfo('Not so Fast', 'Please select an image first')

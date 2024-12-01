@@ -41,6 +41,29 @@ Image Cutter was my final project for a university course
 **OR**
 
 1. Automated Cut: Load an image and load saved parameters to perform an automated cut
+<p>
+  <span style="border: 1px solid black; display: inline-block; margin-right: 10px;">
+    <img src="./Resources/yt_screen.png" alt="Image 1" style="display: block;">
+  </span>
+  <span style="border: 1px solid black; display: inline-block;">
+    <img src="./Resources/auto_cut.png" alt="Image 2" style="display: block;">
+  </span>
+</p>
+2. Enjoy the results :)
+<p>
+  <span style="border: 1px solid black; display: inline-block; margin-right: 10px;">
+    <img src="./Resources/au1.png" alt="Image 1" style="display: block;">
+  </span>
+  <span style="border: 1px solid black; display: inline-block;">
+    <img src="./Resources/au2.png" alt="Image 2" style="display: block;">
+  </span>
+  <span style="border: 1px solid black; display: inline-block; margin-right: 10px;">
+    <img src="./Resources/au3.png" alt="Image 1" style="display: block;">
+  </span>
+  <span style="border: 1px solid black; display: inline-block;">
+    <img src="./Resources/au4.png" alt="Image 2" style="display: block;">
+  </span>
+</p>
 
 ## Tech Stack
 - **Tkinter** for simple user-friendly UI
